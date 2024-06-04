@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "samples"
+version = "0.1.0"
+description = ""
+authors = ["Andrey Vodyanikov <vaa.andrey@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+aio-pika = "^9.4.1"
+async-timeout = "^4.0.3"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
