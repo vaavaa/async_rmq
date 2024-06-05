@@ -1,27 +1,35 @@
 import asyncio
-import aio_pika
-import aio_pika.abc
+import sys
+
+from aio_pika import DeliveryMode, ExchangeType, Message, connect
 
 
-async def main(loop):
-    # Explicit type annotation
-    connection: aio_pika.RobustConnection = await aio_pika.connect_robust("amqp://user:user@127.0.0.1/", loop=loop)
+async def main() -> None:
+    # Perform connection
+    connection = await connect("amqp://user:user@localhost/")
 
-    routing_key = "test_queue"
+    async with connection:
+        # Creating a channel
+        channel = await connection.channel()
 
-    channel: aio_pika.abc.AbstractChannel = await connection.channel()
+        logs_exchange = await channel.declare_exchange(
+            "yrmq.demo-xchange", ExchangeType.DIRECT,
+        )
 
-    await channel.default_exchange.publish(
-        aio_pika.Message(
-            body='Hello {}'.format(routing_key).encode()
-        ),
-        routing_key=routing_key
-    )
+        message_body = b" ".join(
+            arg.encode() for arg in sys.argv[1:]
+        ) or b"Hello World!"
 
-    await connection.close()
+        message = Message(
+            message_body,
+            delivery_mode=DeliveryMode.PERSISTENT,
+        )
+
+        # Sending the message
+        await logs_exchange.publish(message, routing_key="info")
+
+        print(f" [x] Sent {message!r}")
 
 
 if __name__ == "__main__":
-    loop = asyncio.new_event_loop()
-    loop.run_until_complete(main(loop))
-    loop.close()
+    asyncio.run(main())
